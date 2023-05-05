@@ -1,4 +1,5 @@
 import os
+import stat
 from pathlib import Path
 import requests
 import sys
@@ -29,7 +30,7 @@ class VenvAutoSetup:
         self.py_exe = self._get_py_exe()
 
     def _get_py_exe(self):
-        v_py = os.path.join(self.env_path, "Scripts", "python")
+        v_py = os.path.join(self.env_path, "bin", "python")
         v_py = os.path.normpath(v_py)
 
         if self._on_win:
@@ -253,6 +254,7 @@ def setup_environment(environment_path, with_pip=True, torch_version="1.11.0", c
     # install pytorch
     print("installing torch")
     torch_install_script = ve_setup.torch_install_script(torch_version=torch_version, cuda_version=cuda_version)
+    os.chmod(torch_install_script, stat.S_IRWXU)
     subprocess.check_call(torch_install_script)
 
     # install torch-geometric
@@ -262,12 +264,14 @@ def setup_environment(environment_path, with_pip=True, torch_version="1.11.0", c
         for pkg in ("torch-scatter", "torch-sparse", "torch-cluster", "torch-geometric"):
             print(f"Installing {pkg}")
             pkg_inst_script = ve_setup.pkg_install_script(pkg, additional_parameter=find_link)
+            os.chmod(pkg_inst_script, stat.S_IRWXU)
             subprocess.check_call(pkg_inst_script)
     elif cuda_version == '113':
         find_link = f"-f https://data.pyg.org/whl/torch-{torch_version}+cu{cuda_version}.html"
         for pkg in ("torch-scatter", "torch-sparse", "torch-cluster", "torch-geometric"):
             print(f"Installing {pkg}")
             pkg_inst_script = ve_setup.pkg_install_script(pkg, additional_parameter=find_link)
+            os.chmod(pkg_inst_script, stat.S_IRWXU)
             subprocess.check_call(pkg_inst_script)
     else:
         # we gotta build'em wheels
